@@ -11,8 +11,24 @@
   <title>Outfit Planner</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <div id="app">
+<body class="pin-locked">
+  <section id="pinGate" class="pin-gate" aria-labelledby="pinTitle">
+    <div class="pin-card">
+      <div class="pin-brand">Yourfavalien <span>✦</span></div>
+      <p class="pin-kicker">PRIVATE STYLING SPACE</p>
+      <h1 id="pinTitle">ENTER YOUR PIN</h1>
+      <p class="pin-copy">Unlock your Outfit Planner on this device.</p>
+      <form id="pinForm">
+        <label class="visually-hidden" for="pinInput">Six-digit PIN</label>
+        <input id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="••••••" aria-describedby="pinMessage" required>
+        <button type="submit">UNLOCK PLANNER</button>
+      </form>
+      <p id="pinMessage" class="pin-message" role="status" aria-live="polite"></p>
+      <small>For casual privacy only. Your outfit photos stay on this device.</small>
+    </div>
+  </section>
+
+  <div id="app" aria-hidden="true">
     <header class="topbar">
       <div class="brand-wrap" aria-label="Yourfavalien">
         <div class="brand-script">Yourfavalien</div>
