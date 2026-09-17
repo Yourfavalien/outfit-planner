@@ -59,12 +59,17 @@
           <p class="eyebrow">CREATE LOOKS <b>✦</b> EXPERIMENT <b>✦</b> SAVE <b>✦</b> REPEAT</p>
         </div>
 
-        <div class="date-panel">
-          <label for="lookDate">DATE:</label>
-          <input id="lookDate" type="date" aria-label="Look date" />
-          <span class="calendar-icon" aria-hidden="true">▣</span>
+        <div class="event-details">
+          <label class="event-name-panel" for="lookName">
+            <span>EVENT:</span>
+            <input id="lookName" type="text" value="" maxlength="60" autocomplete="off" placeholder="NAME OF EVENT" />
+          </label>
+          <div class="date-panel">
+            <label for="lookDate">EVENT DATE:</label>
+            <input id="lookDate" type="date" aria-label="Event date" />
+            <span class="calendar-icon" aria-hidden="true">▣</span>
+          </div>
         </div>
-        <input id="lookName" class="visually-hidden" type="text" value="" autocomplete="off" />
       </section>
 
       <section class="planner-grid">
@@ -147,6 +152,6 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=print-pdf-1"></script>
+  <script src="app.js?v=event-details-1"></script>
 </body>
 </html>
