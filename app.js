@@ -284,7 +284,12 @@ async function removeBackgroundForSlot(key){
     if(!item.originalData) item.originalData = item.data;
     const removeBackground = await getBackgroundRemover();
     const sourceBlob = await fetch(item.data).then(r => r.blob());
-    const resultBlob = await removeBackground(sourceBlob);
+    const resultBlob = await removeBackground(sourceBlob, {
+      model: 'isnet_quint8',
+      device: 'cpu',
+      proxyToWorker: true,
+      output: { format: 'image/png', quality: .85 }
+    });
     item.data = await blobToDataURL(resultBlob);
     item.bgRemoved = true;
     await saveDraft();
@@ -338,7 +343,7 @@ function renderAllMulti(){
 
 async function processImage(file){
   const src = await fileToDataURL(file);
-  return await downscale(src, 1600, .88, file.type);
+  return await downscale(src, 1024, .82, file.type);
 }
 function fileToDataURL(file){
   return new Promise((resolve,reject)=>{
