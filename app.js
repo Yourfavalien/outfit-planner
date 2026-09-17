@@ -565,13 +565,17 @@ async function createPrintablePdf(){
 
     const name=el('lookName').value.trim() || 'MY LOOK';
     const date=el('lookDate').value || '';
-    doc.setTextColor(15,15,15);
     doc.setFont('helvetica','bold');
+    doc.setFontSize(7);
+    doc.setTextColor(105,105,105);
+    doc.text('EVENT NAME',32,82);
+    doc.text('EVENT DATE',530,82,{align:'right'});
+    doc.setTextColor(15,15,15);
     doc.setFontSize(12);
-    doc.text(name.toUpperCase(),32,92);
+    doc.text(name.toUpperCase(),32,96);
     doc.setFont('helvetica','normal');
     doc.setFontSize(9);
-    doc.text(date,530,92,{align:'right'});
+    doc.text(date || '—',530,96,{align:'right'});
 
     const preview={x:174,y:108,w:264,h:520};
     doc.setDrawColor(150,150,150);
