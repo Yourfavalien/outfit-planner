@@ -523,13 +523,139 @@ multiFilePicker.addEventListener('change',async()=>{
 });
 
 el('saveLookBtn').addEventListener('click',saveCurrent);
+function getImageSize(source){
+  return new Promise((resolve,reject)=>{
+    const image = new Image();
+    image.onload = () => resolve({width:image.naturalWidth,height:image.naturalHeight});
+    image.onerror = reject;
+    image.src = source;
+  });
+}
+
+async function addPdfImage(doc,source,x,y,maxWidth,maxHeight){
+  const size = await getImageSize(source);
+  const scale = Math.min(maxWidth/size.width,maxHeight/size.height);
+  const width = size.width*scale;
+  const height = size.height*scale;
+  const format = source.startsWith('data:image/png') ? 'PNG' : 'JPEG';
+  doc.addImage(source,format,x+(maxWidth-width)/2,y+(maxHeight-height)/2,width,height,undefined,'FAST');
+}
+
+async function createPrintablePdf(){
+  const button=el('printLookBtn');
+  button.disabled=true;
+  button.textContent='CREATING PDF…';
+  toast('Creating your printable look…');
+  try{
+    const {jsPDF}=await import('https://cdn.jsdelivr.net/npm/jspdf@3.0.3/+esm');
+    const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'letter',compress:true});
+    doc.setFillColor(8,8,8);
+    doc.rect(0,0,612,792,'F');
+    doc.setTextColor(245,245,245);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(28);
+    doc.text('OUTFIT',32,48);
+    doc.setTextColor(145,145,145);
+    doc.setFont('helvetica','italic');
+    doc.text('PLANNER',138,48);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    doc.setTextColor(190,190,190);
+    doc.text('YOURFAVALIEN  /  PLAN  STYLE  INSPIRE',32,66);
+
+    const name=el('lookName').value.trim() || 'MY LOOK';
+    const date=el('lookDate').value || '';
+    doc.setTextColor(240,240,240);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(12);
+    doc.text(name.toUpperCase(),32,92);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9);
+    doc.text(date,530,92,{align:'right'});
+
+    const preview={x:174,y:108,w:264,h:520};
+    doc.setDrawColor(110,110,110);
+    doc.rect(preview.x,preview.y,preview.w,preview.h);
+    doc.setFontSize(9);
+    doc.setTextColor(210,210,210);
+    doc.text('OUTFIT PREVIEW',preview.x+10,preview.y+16);
+
+    const entries=Object.entries(state.singles)
+      .filter(([key,value])=>value && key!=='makeup-main')
+      .sort((a,b)=>(state.previewLayout[a[0]]?.z||0)-(state.previewLayout[b[0]]?.z||0));
+    for(const [key,item] of entries){
+      const layout=state.previewLayout[key] || defaultLayoutFor(key);
+      const maxWidth=preview.w*(layout.w/100);
+      const maxHeight=maxWidth*1.45;
+      const centerX=preview.x+preview.w*(layout.x/100);
+      const centerY=preview.y+preview.h*(layout.y/100);
+      await addPdfImage(doc,item.data,centerX-maxWidth/2,centerY-maxHeight/2,maxWidth,maxHeight);
+    }
+
+    const clothingKeys=['top','bottoms','outerwear','shoes','accessories','jewelry'];
+    let leftY=108;
+    for(const key of clothingKeys){
+      const item=state.singles[key];
+      if(!item) continue;
+      doc.setDrawColor(70,70,70);
+      doc.rect(32,leftY,126,82);
+      doc.setFontSize(7);
+      doc.setTextColor(200,200,200);
+      doc.text((SLOT_LABELS[key]||key).toUpperCase(),38,leftY+11);
+      await addPdfImage(doc,item.data,39,leftY+16,112,60);
+      leftY+=90;
+    }
+
+    let rightY=108;
+    const beauty=state.singles['makeup-main'];
+    if(beauty){
+      doc.setDrawColor(70,70,70);
+      doc.rect(454,rightY,126,120);
+      doc.setFontSize(7);
+      doc.text('MAKEUP / BEAUTY',460,rightY+11);
+      await addPdfImage(doc,beauty.data,461,rightY+17,112,96);
+      rightY+=130;
+    }
+    const ideas=[...(state.makeupIdeas||[]),...(state.inspiration||[])].slice(0,6);
+    for(let index=0;index<ideas.length;index++){
+      const col=index%2,row=Math.floor(index/2);
+      await addPdfImage(doc,ideas[index].data,454+col*65,rightY+row*70,60,64);
+    }
+    rightY+=Math.ceil(ideas.length/2)*70+12;
+
+    doc.setDrawColor(70,70,70);
+    doc.rect(454,rightY,126,Math.min(180,740-rightY));
+    doc.setFontSize(7);
+    doc.setTextColor(200,200,200);
+    doc.text('NOTES',460,rightY+12);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    const notes=doc.splitTextToSize(el('notes').value||'',112);
+    doc.text(notes,460,rightY+27);
+
+    doc.setFontSize(7);
+    doc.setTextColor(120,120,120);
+    doc.text('OUTFITS HIT DIFFERENT HERE',32,770);
+    const filename=(name||'outfit-look').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase()||'outfit-look';
+    doc.save(filename+'.pdf');
+    toast('Printable PDF downloaded');
+  }catch(error){
+    console.error('PDF export failed',error);
+    toast('PDF could not download — opening print view');
+    window.print();
+  }finally{
+    button.disabled=false;
+    button.innerHTML='⎙ &nbsp; PRINT / PDF';
+  }
+}
+
 el('printLookBtn').addEventListener('click',()=>{
   state.name = el('lookName').value.trim() || `Look ${el('lookDate').value || ''}`.trim();
   state.date = el('lookDate').value;
   state.notes = el('notes').value;
   document.body.dataset.printName = state.name;
   clearPreviewSelection();
-  window.print();
+  createPrintablePdf();
 });
 el('clearBtn').addEventListener('click',()=>{if(confirm('Clear this look?'))resetState()});
 el('newLookBtn').addEventListener('click',()=>{if(confirm('Start a new look? Your current look will stay only if you saved it.'))resetState()});
