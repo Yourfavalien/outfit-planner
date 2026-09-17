@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Outfit Planner</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=print-white-1" />
 </head>
 <body class="pin-locked">
   <section id="pinGate" class="pin-gate" aria-labelledby="pinTitle">
@@ -60,10 +60,11 @@
         </div>
 
         <div class="event-details">
-          <label class="event-name-panel" for="lookName">
-            <span>EVENT:</span>
+          <div class="date-panel event-name-panel">
+            <label for="lookName">EVENT NAME:</label>
             <input id="lookName" type="text" value="" maxlength="60" autocomplete="off" placeholder="NAME OF EVENT" />
-          </label>
+            <span class="event-icon" aria-hidden="true">✦</span>
+          </div>
           <div class="date-panel">
             <label for="lookDate">EVENT DATE:</label>
             <input id="lookDate" type="date" aria-label="Event date" />
@@ -152,6 +153,6 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=event-details-1"></script>
+  <script src="app.js?v=print-white-1"></script>
 </body>
 </html>
