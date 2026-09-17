@@ -70,7 +70,6 @@ let activeMultiSlot = null;
 let selectedPreviewSlot = null;
 let previewGesture = null;
 let toastTimer = null;
-let bgRemovalModulePromise = null;
 let bgBusySlot = null;
 
 const el = id => document.getElementById(id);
@@ -256,21 +255,89 @@ function resetSelectedPiece(){
   saveDraft();
 }
 
-async function getBackgroundRemover(){
-  if(!bgRemovalModulePromise){
-    bgRemovalModulePromise = import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm')
-      .then(mod => mod.default || mod.removeBackground || mod);
-  }
-  return bgRemovalModulePromise;
+function loadImage(src){
+  return new Promise((resolve,reject)=>{
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
 }
 
-function blobToDataURL(blob){
-  return new Promise((resolve,reject)=>{
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+function sampleCorner(data,width,height,startX,startY,size=10){
+  let red=0,green=0,blue=0,count=0;
+  for(let y=startY;y<Math.min(height,startY+size);y++){
+    for(let x=startX;x<Math.min(width,startX+size);x++){
+      const offset=(y*width+x)*4;
+      red+=data[offset]; green+=data[offset+1]; blue+=data[offset+2]; count++;
+    }
+  }
+  return [red/count,green/count,blue/count];
+}
+
+async function removeSimpleBackground(source){
+  const image = await loadImage(source);
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext('2d',{willReadFrequently:true});
+  context.drawImage(image,0,0);
+  const frame = context.getImageData(0,0,canvas.width,canvas.height);
+  const pixels = frame.data;
+  const width = canvas.width;
+  const height = canvas.height;
+  const sampleSize = Math.max(4,Math.min(12,Math.floor(Math.min(width,height)/20)));
+  const backgrounds = [
+    sampleCorner(pixels,width,height,0,0,sampleSize),
+    sampleCorner(pixels,width,height,width-sampleSize,0,sampleSize),
+    sampleCorner(pixels,width,height,0,height-sampleSize,sampleSize),
+    sampleCorner(pixels,width,height,width-sampleSize,height-sampleSize,sampleSize)
+  ];
+  const removed = new Uint8Array(width*height);
+  const queue = new Int32Array(width*height);
+  let head=0,tail=0;
+  const thresholdSquared = 78*78;
+
+  function matchesBackground(index){
+    const offset=index*4;
+    let closest=Infinity;
+    for(const color of backgrounds){
+      const red=pixels[offset]-color[0];
+      const green=pixels[offset+1]-color[1];
+      const blue=pixels[offset+2]-color[2];
+      closest=Math.min(closest,red*red+green*green+blue*blue);
+    }
+    return closest <= thresholdSquared;
+  }
+  function add(index){
+    if(index<0 || index>=removed.length || removed[index] || !matchesBackground(index)) return;
+    removed[index]=1;
+    queue[tail++]=index;
+  }
+
+  for(let x=0;x<width;x++){add(x);add((height-1)*width+x);}
+  for(let y=1;y<height-1;y++){add(y*width);add(y*width+width-1);}
+  while(head<tail){
+    const index=queue[head++];
+    const x=index%width;
+    if(x>0) add(index-1);
+    if(x<width-1) add(index+1);
+    if(index>=width) add(index-width);
+    if(index<width*(height-1)) add(index+width);
+  }
+  for(let index=0;index<removed.length;index++){
+    if(removed[index]) pixels[index*4+3]=0;
+  }
+  for(let y=1;y<height-1;y++){
+    for(let x=1;x<width-1;x++){
+      const index=y*width+x;
+      if(!removed[index] && (removed[index-1]||removed[index+1]||removed[index-width]||removed[index+width])){
+        pixels[index*4+3]=Math.min(pixels[index*4+3],150);
+      }
+    }
+  }
+  context.putImageData(frame,0,0);
+  return canvas.toDataURL('image/png');
 }
 
 async function removeBackgroundForSlot(key){
@@ -279,18 +346,10 @@ async function removeBackgroundForSlot(key){
   bgBusySlot = key;
   refreshSingles();
   updatePreviewEditorBar();
-  toast('Removing background… first time may take a moment');
+  toast('Removing a plain background…');
   try{
     if(!item.originalData) item.originalData = item.data;
-    const removeBackground = await getBackgroundRemover();
-    const sourceBlob = await fetch(item.data).then(r => r.blob());
-    const resultBlob = await removeBackground(sourceBlob, {
-      model: 'isnet_quint8',
-      device: 'cpu',
-      proxyToWorker: true,
-      output: { format: 'image/png', quality: .85 }
-    });
-    item.data = await blobToDataURL(resultBlob);
+    item.data = await removeSimpleBackground(item.originalData);
     item.bgRemoved = true;
     await saveDraft();
     toast('Background removed');
