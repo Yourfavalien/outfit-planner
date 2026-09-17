@@ -1,3 +1,39 @@
+const PIN_HASH = '96fb537cfb0fc4d42763567f56ac64e4d5a879eda980b5e107ddb177f39a992d';
+const pinGate = document.getElementById('pinGate');
+const pinForm = document.getElementById('pinForm');
+const pinInput = document.getElementById('pinInput');
+const pinMessage = document.getElementById('pinMessage');
+
+function unlockPlanner(){
+  document.body.classList.remove('pin-locked');
+  document.getElementById('app').setAttribute('aria-hidden','false');
+  pinGate.hidden = true;
+  try{ sessionStorage.setItem('yfa-planner-unlocked','yes'); }catch{}
+}
+async function hashPin(value){
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest('SHA-256',bytes);
+  return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('');
+}
+if(sessionStorage.getItem('yfa-planner-unlocked') === 'yes') unlockPlanner();
+else setTimeout(()=>pinInput.focus(),80);
+pinForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  pinMessage.textContent='CHECKING…';
+  if(await hashPin(pinInput.value) === PIN_HASH){
+    pinMessage.textContent='WELCOME BACK';
+    setTimeout(unlockPlanner,180);
+  }else{
+    pinMessage.textContent='THAT PIN IS NOT CORRECT';
+    pinInput.value='';
+    const card=pinGate.querySelector('.pin-card');
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+    pinInput.focus();
+  }
+});
+
 const SINGLE_SLOTS = [
   ['top','TOP','♧'],
   ['bottoms','BOTTOMS','♢'],
