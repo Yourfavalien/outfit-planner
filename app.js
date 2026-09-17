@@ -549,23 +549,23 @@ async function createPrintablePdf(){
   try{
     const {jsPDF}=await import('https://cdn.jsdelivr.net/npm/jspdf@3.0.3/+esm');
     const doc=new jsPDF({orientation:'portrait',unit:'pt',format:'letter',compress:true});
-    doc.setFillColor(8,8,8);
+    doc.setFillColor(255,255,255);
     doc.rect(0,0,612,792,'F');
-    doc.setTextColor(245,245,245);
+    doc.setTextColor(15,15,15);
     doc.setFont('helvetica','bold');
     doc.setFontSize(28);
     doc.text('OUTFIT',32,48);
-    doc.setTextColor(145,145,145);
+    doc.setTextColor(95,95,95);
     doc.setFont('helvetica','italic');
     doc.text('PLANNER',138,48);
     doc.setFont('helvetica','normal');
     doc.setFontSize(8);
-    doc.setTextColor(190,190,190);
+    doc.setTextColor(80,80,80);
     doc.text('YOURFAVALIEN  /  PLAN  STYLE  INSPIRE',32,66);
 
     const name=el('lookName').value.trim() || 'MY LOOK';
     const date=el('lookDate').value || '';
-    doc.setTextColor(240,240,240);
+    doc.setTextColor(15,15,15);
     doc.setFont('helvetica','bold');
     doc.setFontSize(12);
     doc.text(name.toUpperCase(),32,92);
@@ -574,10 +574,10 @@ async function createPrintablePdf(){
     doc.text(date,530,92,{align:'right'});
 
     const preview={x:174,y:108,w:264,h:520};
-    doc.setDrawColor(110,110,110);
+    doc.setDrawColor(150,150,150);
     doc.rect(preview.x,preview.y,preview.w,preview.h);
     doc.setFontSize(9);
-    doc.setTextColor(210,210,210);
+    doc.setTextColor(45,45,45);
     doc.text('OUTFIT PREVIEW',preview.x+10,preview.y+16);
 
     const entries=Object.entries(state.singles)
@@ -597,10 +597,10 @@ async function createPrintablePdf(){
     for(const key of clothingKeys){
       const item=state.singles[key];
       if(!item) continue;
-      doc.setDrawColor(70,70,70);
+      doc.setDrawColor(185,185,185);
       doc.rect(32,leftY,126,82);
       doc.setFontSize(7);
-      doc.setTextColor(200,200,200);
+      doc.setTextColor(45,45,45);
       doc.text((SLOT_LABELS[key]||key).toUpperCase(),38,leftY+11);
       await addPdfImage(doc,item.data,39,leftY+16,112,60);
       leftY+=90;
@@ -609,7 +609,7 @@ async function createPrintablePdf(){
     let rightY=108;
     const beauty=state.singles['makeup-main'];
     if(beauty){
-      doc.setDrawColor(70,70,70);
+      doc.setDrawColor(185,185,185);
       doc.rect(454,rightY,126,120);
       doc.setFontSize(7);
       doc.text('MAKEUP / BEAUTY',460,rightY+11);
@@ -623,10 +623,10 @@ async function createPrintablePdf(){
     }
     rightY+=Math.ceil(ideas.length/2)*70+12;
 
-    doc.setDrawColor(70,70,70);
+    doc.setDrawColor(185,185,185);
     doc.rect(454,rightY,126,Math.min(180,740-rightY));
     doc.setFontSize(7);
-    doc.setTextColor(200,200,200);
+    doc.setTextColor(45,45,45);
     doc.text('NOTES',460,rightY+12);
     doc.setFont('helvetica','normal');
     doc.setFontSize(8);
