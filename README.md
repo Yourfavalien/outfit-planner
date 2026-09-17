@@ -17,3 +17,7 @@ For GitHub Pages, publish the repository from the `main` branch root.
 
 ## Background removal
 Use **REMOVE BG** on an uploaded item to create a transparent cutout in the browser. **RESTORE BG** brings the original image back. The first removal can take longer because the browser must download the background-removal model.
+
+## PIN screen
+
+The planner opens behind a six-digit PIN gate. This is a casual privacy measure only, not secure authentication; GitHub Pages and the site's source remain public when using GitHub Free.
