@@ -489,6 +489,13 @@ el('outfitPreview').addEventListener('pointerdown', e=>{
   if(piece){beginPreviewGesture(e,'move',piece.dataset.previewPiece);return;}
   if(e.target === e.currentTarget) clearPreviewSelection();
 });
+
+el('outfitPreview').addEventListener('click', e=>{
+  const piece=e.target.closest('[data-preview-piece]');
+  if(!piece) return;
+  e.stopPropagation();
+  selectPreviewPiece(piece.dataset.previewPiece);
+});
 window.addEventListener('pointermove', movePreviewGesture, {passive:false});
 window.addEventListener('pointerup', endPreviewGesture);
 window.addEventListener('pointercancel', endPreviewGesture);
