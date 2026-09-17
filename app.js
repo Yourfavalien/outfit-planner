@@ -202,7 +202,7 @@ function beginPreviewGesture(e, mode, key){
     original:{...layout},
     startWidthPx:piece?.getBoundingClientRect().width || rect.width * layout.w / 100
   };
-  e.currentTarget.setPointerCapture?.(e.pointerId);
+  piece?.setPointerCapture?.(e.pointerId);
 }
 
 function movePreviewGesture(e){
@@ -480,14 +480,14 @@ document.addEventListener('click', async e=>{
   const mrem=e.target.closest('[data-multi-remove]'); if(mrem){state[mrem.dataset.multiRemove].splice(Number(mrem.dataset.index),1);renderAllMulti();saveDraft();}
   const load=e.target.closest('[data-load-look]'); if(load){const saved=await getSaved();loadSnapshot(saved[Number(load.dataset.loadLook)]);}
   const del=e.target.closest('[data-delete-look]'); if(del){const saved=await getSaved();saved.splice(Number(del.dataset.deleteLook),1);await setSaved(saved);await renderSaved();}
-  if(e.target === el('outfitPreview')) clearPreviewSelection();
 });
 
 el('outfitPreview').addEventListener('pointerdown', e=>{
   const resize=e.target.closest('[data-resize-piece]');
   if(resize){beginPreviewGesture(e,'resize',resize.dataset.resizePiece);return;}
   const piece=e.target.closest('[data-preview-piece]');
-  if(piece){beginPreviewGesture(e,'move',piece.dataset.previewPiece);}
+  if(piece){beginPreviewGesture(e,'move',piece.dataset.previewPiece);return;}
+  if(e.target === e.currentTarget) clearPreviewSelection();
 });
 window.addEventListener('pointermove', movePreviewGesture, {passive:false});
 window.addEventListener('pointerup', endPreviewGesture);
