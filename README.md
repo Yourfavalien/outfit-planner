@@ -16,7 +16,7 @@ For GitHub Pages, publish the repository from the `main` branch root.
 
 
 ## Background removal
-Use **REMOVE BG** on an uploaded item to create a transparent cutout in the browser. **RESTORE BG** brings the original image back. The lightweight remover works best when the clothing is photographed against a plain or fairly even background; it runs entirely on the device without downloading an AI model.
+Use **REMOVE BG** on an uploaded item to create a transparent cutout in the browser. **RESTORE BG** brings the original image back. The first removal can take longer because the browser must download the background-removal model.
 
 ## PIN screen
 
